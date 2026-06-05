@@ -1,0 +1,255 @@
+---
+title: "Coursework 2"
+output:
+  pdf_document: default
+  html_document: defaul
+subtitle: "Student Id : 35699906, Sanula Herath-Mudiyanselage"
+
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Question 1(i)
+```{r}
+# Defining and importing the data 
+
+petrol <- read.table("petrol.txt", header = TRUE)
+singers <- read.table("singers.txt", header = TRUE)
+
+# Obtaining summaries for all the variables 
+
+summary(petrol)
+
+# Scatter plot matrix and printing correlation coefficients 
+
+pairs(petrol,pch = 18,col = "steelblue",labels = names(petrol))
+      
+# Calculating correlation coefficients 
+
+corr <- cor(petrol, use = "complete.obs")
+round(corr, 2)
+```
+
+## Relationship Amongst Variables 
+### From Data Summary 
+- y: values range from 16 to 58 with mean of 30.58 and  median 30 imping a fairly symmetric distribution, however the max val of 58 implies possible outlier.
+- x1: values range from 24 to 93 with mean 57.322 and median of 60, as a result of the slightly higher median com pared to the mean this implies a slight left-skewness caused by lower values.
+- x2: values range from 33 to 92 with mean 56.5 and median 60 also impling slight left-skewness.
+- x3,x4: as both means are above their medians this indicates positive skewnwss, with their respective maximum values being larger than the upper qurtiles this suggest possible high end outliers. 
+
+### From Scatter-plot Matrix
+- Classifying a strong relationship amount two variables as having a correlation coefficient of |r| > 0.7, all variable have relatively strong correlations with each other, with the weakest correlation being coming from x3,x2 (r=0.77) and the strongest being between x4,x3
+- All plots exhibit a strong positive relationship
+- Upon visual inspection there are no signs of drastic non-linear relationships 
+- In a majority of the scatter plots show areas in which the points cluster around implying that a large proportion if the observations lie within similar range of values 
+- Tight clustering also implies limited spread and variables don't vary much for many observations
+- As a result of separate and distinct clusters there could be hidden regimes or categories within the data.
+
+### Conclusion 
+- As a result of x3 and x4 being positive skewness and large upper values they may benefit from a log transformation
+- y and x4 show the strongest positive relationship with y and x3 also showing strong linear association
+- There appear to be observations with high values of y that lie away from the main concentration of points.
+- y and x3/x4 appear slightly curved 
+
+# Question 1(ii)
+```{r}
+# Defining log of y
+log_y <- log(petrol$y)
+logy_model <- lm(log_y ~ x1 + x2 + x3 + x4, data=petrol)
+plot(logy_model)
+```
+
+## Assesing Wheather the Model Fits the Data or Not
+### Residuals vs Fitted 
+- Residuals are generally centered around zero and points appear on both sides of the zero line. therefore this suggest that the model is likely a good fit for the data.
+- There appears to be some curvature within the line, this implies that there is still some non-linearity within the data.
+- There are no major funnel shapes forming therefore variance appears stable.
+- the observations 10,86,117 are labelled as having relatively large residuals therefore they maybe influential observations.
+
+### Normal Q-Q plot 
+- The points are generally clustered along the reference line and don't exhibit any curvature 
+- How ever the points 10,86,117 deviate significantly and lie at the ends of the reference line. this suggest that they have large negative or positive residuals as we deduced from analysis of the residuals vs fitted plot.
+
+### Scale Location
+- The red line is relatively smooth and flat 
+- There isn't any clear sign of a funnel shape suggesting the variance is constant
+
+### Residuals vs Levareaged plot 
+- All points are within Cook's distance 
+- Observations 10,1,48 are most likely to be influential as they are both isolated and high-leverage points. 
+
+### Conclusion
+- In conclusion the data fits the model relativly well with some outliers within the data.
+
+# Question 1(iii)
+```{r}
+summary(logy_model)
+
+# Identifying the least significant variable (looking for the predictor with the largest p-value)
+# As the highest p-value is 0.086124 for x1 we remove it from the model
+
+refit_model_1 <- lm(log_y ~ x2 + x3 + x4, data=petrol)
+summary(refit_model_1)
+
+# No p-value below 0.05
+```
+### Procedure and Refitted Model 
+- The procedure that i followed to develop the new model was first by getting the summary statistic for the original model
+- Then i searched for the estimator with the highest p-value which in this case was x1,
+- I removed x1 from the model ad refit the data 
+- Then i got the summary statistics for the newly fit model 
+- Upon inspection no p-value was above 0.05 all remaining estimators were significant at the 5% level
+- The final model was $log(y_i)=\beta_0+\beta_2 x_{2i}+\beta_3 x_{3i}+\beta_4 x_{4i}+\varepsilon_i,\quad i=1,\dots,n$ where $\varepsilon_i - N(0,\sigma^2)$
+
+# Question 1(iv)
+```{r}
+# Adding the quadratic terms to a refit model in the previous question 
+
+quad_model <- lm(log_y ~ x2 + x3 + x4 + I(x3^2) + I(x4^2), data=petrol)
+
+# Getting the summary statistics
+
+summary(quad_model)
+
+# Identifying the least significant variable (looking for the predictor with the largest p-value)
+# As the highest p-value is 0.552335 for x4^2 we remove it from the model
+
+refit_quad_model_1 <- lm(log_y ~ x2 + x3 + x4 + I(x3^2), data=petrol)
+summary(refit_quad_model_1)
+
+# Identifying the least significant variable (looking for the predictor with the largest p-value)
+# As the highest p-value is 0.862757 for x3 we remove it from the model
+
+refit_quad_model_2 <- lm(log_y ~ x2 + x4 + I(x3^2), data=petrol)
+summary(refit_quad_model_2)
+
+# No p-value below 0.05 
+
+```
+### Procedure and Refitted model 
+- Fist i added the quadratic terms x3^2 and x4^2 to the model we developed through backwards elimination from the earlier question
+- After getting the summary statistics i then searched for the estimator with the highest p-value above 0.05 
+- The highest p-values was 0.552335 for x4^2 which i removed from the model 
+- After getting the summary statistics again ,the estimator with the highest p-value for the second iteration was x3 which i also removed
+- Running the summary statistics again there were no p-values above 0.05 therefore all remaining estimators are significant at the 5% level
+- $\log(y_i)=\beta_0+\beta_2 x_{2i}+\beta_4 x_{4i}+\beta_5 x_{3i}^{2}+\varepsilon_i,\quad i=1,\dots,n$ where $\varepsilon_i - N(0,\sigma^2)$
+
+# Question 1(v)
+```{r}
+# Refiting the model found in part(iii) but using the first 85 rows
+
+refit_model_1_r <-lm(log_y ~ x2 + x3 + x4, data=petrol,subset = 1:85)
+
+# Refiting the model found in part(iv) but using the first 85 rows
+ 
+refit_quad_model_1_r <- lm(log_y ~ x2 + x4 + I(x3^2), data=petrol,subset = 1:85)
+
+# Predicting the data beyond the 85th row for both models
+
+predict_log_y <- predict(refit_model_1_r, newdata = petrol[86:125,])
+
+predict_log_y_quad <- predict(refit_quad_model_1_r, newdata = petrol[86:125,])
+
+# Transforming the scale back for both models
+
+predict_raw <- exp(predict_log_y)
+
+predict_quad_raw <- exp(predict_log_y_quad)
+
+# Defining actual data beyond the 85th row 
+
+actual <- petrol$y[86:125]
+
+# Calculating root meant square error for both models 
+
+error_1 <- sqrt(mean((actual-predict_raw)^2))
+error_2 <- sqrt(mean((actual-predict_quad_raw)^2))
+
+print(error_1)
+print(error_2)
+
+```
+
+### Interpreting the output
+- The lower the Root Mean Square Prediction the better the model 
+- The quadratic model has lower RMSPE therefore the quadratic model gives better out-of-sample predictions and is a better fit for the data 
+- The improvement in RMSPE suggest that including the quadratic term for x3 captures a nonlinear structure existing within the data that cannot be described by. a purely linear model.
+
+# Question 2(i)
+```{r}
+# Creating the boxplots 
+
+boxplot(height ~ voice,
+        data = singers,
+        col = c("lightpink","salmon","lightblue","steelblue"),
+        xlab = "Voice Part",
+        ylab = "Height in inches")
+
+summary(singers)
+```
+
+### Interpreting the boxplots 
+- Soprano and Alto singers have a noticeable difference in median hieght compared to Tenor and Bass 
+- This implies that Soprano and Altos are tipicality female voice parts and Tenor and Bass are male voice parts.
+- The median of both Sopranos and Alto is relatively the same 
+- Bass and Tenor show similar variability however Bass has a slightly higher median than Tenor
+- Tenor and Bass have wider ranges than Soprano and Alto
+- There are two outliers one in Soprano and Alto this may be as a result of inaccurate measurement of hight given they were self measured.
+
+# Question 2(ii)
+
+### The one way ANOVA Model 
+- $Y_{ij}=\mu+\tau_i+\varepsilon_{ij}, \quad i=1,2,3,4,\; j=1,\dots,n_i$
+- With response variable (height) and factor (Voice part)
+- The Null hypothesis is $H_0:\mu_1=\mu_2=\mu_3=\mu_4$
+- The alternative hypothesis is $H_1:\text{At least one group mean differs}$
+
+```{r}
+# Running ANOVA
+singers$vocie <-as.factor(singers$voice)
+anova_model <- aov(height ~ voice, data=singers)
+summary(anova_model)
+summary(lm(height ~ voice, data = singers))
+```
+
+### Through the results from running ANOVA and factor model
+#### The group means are as follows
+
+- $\hat{\mu}_{Soprano}=64.7179$
+- $\hat{\mu}_{Alto}=64.7179+0.1987=64.9166$
+- $\hat{\mu}_{Tenor}=64.7179+5.4535=70.1714$
+- $\hat{\mu}_{Bass}=64.7179+5.6821=70.4000$
+
+#### Interpretation
+
+- The test statistic is : F = 43.21 with (3,126) degrees of freedom
+- The P-value is : $p < 2\times10^{-16}$ since $p < 0.05$ we reject the null hypothesis
+- Though carrying out the hypothesis test it shows that there is extremely strong evidence that the height differs between at least two voice parts.
+- Furthermore Sopranos and Altos have similar avarage heights while Tenor and Basses are substantially taller 
+
+# Question 2(iii)
+```{r}
+# Anscombe Residual Plot 
+plot(fitted(anova_model), resid(anova_model))
+abline(h = 0, lty = 2)
+
+plot(anova_model)
+```
+
+### Interpreting the plots for the 
+
+#### The Anscombe Residual Plot 
+- Residuals are centered around zero with no strong curvature trend exhibiting from the plot
+- The two vertical bands appear around the fitted values of 65 and 70
+- There are some outliers within the plot (37,49,95)
+- Since the four voice groups have similar female and male means the fitted values cluster into two vertical bands 
+- Residuals spread seems similar with no funnel shape showing from the plot
+
+#### The Normal Probalility Plot
+- The point lie relatively along the reference line with some point deviating from the reference line towards the ends and the center.
+- the observations 37,49,95 are labled to have deveated the most 
+ - therefor this implies that the residual are mormally distributed although there are some deviations present accompanied by soem outliers/unusual observations
+
+#### Conclution
+- In conclusion the ANOVA assumptions appear to be satisfied by this model.
