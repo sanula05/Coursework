@@ -1,0 +1,204 @@
+---
+title: "Coursework 1"
+output:
+  pdf_document: default
+  html_document: default
+date: "2026-03-04"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Question 1
+### i) Plotting the data,current (y) versus velocity (x)
+
+```{r}
+windmill <- read.table("windmill.txt", header = TRUE)
+plot(windmill$velocity, windmill$current)
+
+```
+
+**Linear relationship between the variables**
+
+The data appear to follow a general trend (as the velocity increase the current increase), although there is a positive relationship the data does not appear to follow a straight line model.
+The point are closely clustered together relative/around the positive relationship implying a consistent relationship between the variables.
+The data appear to follow a curve rather than a straight line therefore the quality of the linear relation is relatively poor therefore a simple linear model may not be a good fit.
+
+```{r}
+plot(log(windmill$velocity),log(windmill$current))
+```
+
+**Comparison of the original data and data after log scale transformation**
+
+After the log transformation the data seem to follow a more linear relationship
+Although there is an anomalous data point after the scale transformation
+The points are more closely clustered around the positive relationship of the data in the log transformed data.
+The log transformed graph shows a better linear relationship for modeling purposes.
+
+## ii)
+```{r}
+orign_l_r <- lm(current ~ velocity, data = windmill)
+log_l_r <- lm(log(current) ~ log(velocity), data = windmill)
+
+plot(windmill$velocity, windmill$current)
+
+abline(orign_l_r)
+
+plot(log(windmill$velocity),log(windmill$current))
+
+abline(log_l_r)
+```
+
+### Summaries of the regression lines 
+
+```{r}
+summary(orign_l_r)
+summary(log_l_r)
+```
+
+### Ploting residuals
+
+```{r}
+plot(orign_l_r, which = 1)
+plot(log_l_r, which = 1)
+```
+
+**Comparison of the two models using R-squared statistic and residual plots**
+
+The Original model has a larger $R^2$ Statistics than the log version,this implies that a larger proportion of the variability in the response variable is explained.
+However when comparing the residuals vs fitted of the two graphs, the points in the residuals vs fitted for the log transformed graph are more centered around with a less prominent curve and funnel shape and less random scatter compared to the residuals vs fitted of the original data.Therefore indicating that the linear relationship is stronger in the log transformed data and more appropriate for the data.
+
+## iii)
+### Summary of the regression models
+#### The estimated regression line is given by :
+```{r}
+summary(log_l_r)$coefficients
+```
+
+#### The confidance interval is as follows : 
+```{r}
+confint(log_l_r, level = 0.95)
+```
+#### The error variance for the log model is :
+```{r}
+sigma(log_l_r)^2
+```
+
+## Question 2
+### i)
+
+```{r}
+super <- read.table("super.txt", header = TRUE)
+```
+
+
+```{r}
+# Plotting Supervisors(y) against Workers(x)
+plot(super$Workers, super$Supervisors)
+# Plotting Log Supervisors(y) against Log Workers(x)
+plot(log(super$Workers),log(super$Supervisors))
+# Plotting Supervisors/Workers(y) against -1/Workers(x)
+Sup_Wor <- super$Supervisors / super$Workers
+neg_rec <- -1 / super$Workers                     
+plot(neg_rec, Sup_Wor)
+```
+
+**Justification on why Log model best follows the assumption of a simple linear regression model**
+
++ The graph of the ratio of Supervisors/Workers against the negative reciprocal of Workers appears to show no correlation as all the points are scattered showing no positive or negative relationship between them therefore this model is likely not a good fit.
++ Both the original scale and log transformed scale show strong positive linear relationship with the log transformed graph showing a stronger relationship with the point being clustered more closely and uniformly along the relationship.
++ Therefore the best fit for a linear model is the log transformed data.
+
+### ii)
+
+**Applying a simple linear regression model to the log scale data**
+
+```{r}
+log_sup_l_r <- lm(log(Supervisors) ~ log(Workers), data = super)
+plot(log(super$Workers),log(super$Supervisors))
+abline(log_sup_l_r) 
+summary(log_sup_l_r)
+```
+
+The data appears to fit the linear model fairly well.
+
+### iii) 
+
+**Applying and fitting a quadratic regression model on the log scale**
+
+```{r}
+quad_model <- lm(log(Supervisors) ~ log(Workers) + I(log(Workers)^2), data = super)
+plot(log(super$Workers),log(super$Supervisors))
+#plot(quad_model)
+summary(quad_model)
+anova(log_sup_l_r, quad_model)
+```
+
+**Testing the hypothesis of the no quadratic term**
+
+$$H_0:\beta_2 = 0$$
+
+$$H_1:\beta_2 \ne 0$$
+
+for I(log(Supervisors)^2) , $Pr(>|t|)=0.659$
+
+as p-value is >= 0.05 the quadratic term not significant therefore the simple linear model is sufficient.
+
+### iv)
+
+```{r}
+coef(log_sup_l_r)
+```
+
+$\hat{log(Supervisors)}=\beta_o+\beta_1(log(Workers))$ 
+
+with estimates $\hat{\beta_0} = -1.4845822$ and $\hat{\beta_1}= 0.9092009$
+
+**Hypothesis test for no relationship**
+
+$$H_0:{\beta_1}=0$$
+$$H_1:{\beta_1}\ne0$$
+```{r}
+summary(log_sup_l_r)
+```
+Looking at the p value for log Supervisors 
+p < 0.05 therefore reject $H_0$, therefore we can reject the claim that there is no relationship between the number of Workers and Supervisors.
+
+```{r}
+#Confidance intervals at 95%
+summary(log_sup_l_r)$coefficients
+confint(log_sup_l_r, level = 0.95)
+confint(log_sup_l_r)["log(Workers)", ]
+```
+Estimates of sigma^2
+```{r}
+sigma(log_sup_l_r)^2
+```
+
+Degrees of freedom 
+```{r}
+df.residual(log_sup_l_r)
+```
+
+### v)
+
+```{r}
+coef(log_sup_l_r)
+```
+
+**The fitted model is as follows**
+
++ $\hat{Log(Supervisors)}=\hat{\beta_0}+\hat{\beta_1}Log(Workers)$
++ $\hat{Log(Supervisors)}=-1.4845822+0.9092009*Log(Workers)$
+
+**Using the fitted model to predict the mean value of a new independent observation at 1600 supervised workers. **
+
+```{r}
+new <- data.frame(Workers = 1600)
+
+predict(log_sup_l_r, newdata = new, interval = "confidence", level = 0.95)
+
+exp(predict(log_sup_l_r, newdata = new, interval = "confidence", level = 0.95))
+```
+
++ As 256 lies outside the confidence interval it would be unlikely to see 256 supervisors for 1600 workers
